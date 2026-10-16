@@ -1,0 +1,37 @@
+name: WorkBuddy 每日签到 + 派猫猫
+
+on:
+  # 定时：GitHub cron 为 UTC。下方 "0 0 * * *" = 北京时间 08:00。
+  # 想改成其他时间，按 UTC = 北京时间 - 8 小时 换算即可（例如 09:30 北京 = "30 1 * * *"）。
+  schedule:
+    - cron: "0 0 * * *"
+  # 手动触发（验收/调试用）
+  workflow_dispatch:
+
+# 最小权限：只需读取仓库内容运行脚本；不涉及写操作
+permissions:
+  contents: read
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # 以下均来自仓库 Secrets，运行时由 GitHub 自动脱敏，不会出现在日志明文
+      WB_TOKEN: ${{ secrets.WB_TOKEN }}
+      WB_DOMAIN: ${{ secrets.WB_DOMAIN }}        # 可选，默认 www.codebuddy.cn
+      WB_UID: ${{ secrets.WB_UID }}              # 可选，当前接口未强制要求
+      FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+      TRAVEL_LOCATION: ${{ secrets.TRAVEL_LOCATION }}  # 可选，1-4 指定地点，留空随机
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run check-in (dynamic interpreter)
+        # 解释器路径不写死版本号：优先 python3，回退 python
+        shell: bash
+        run: |
+          set -euo pipefail
+          PY=$(command -v python3 || command -v python)
+          echo "使用解释器: $PY ($($PY --version 2>&1))"
+          "$PY" checkin.py

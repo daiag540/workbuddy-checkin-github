@@ -1,0 +1,6 @@
+# 本地一次性令牌文件，绝不入库
+.wb_token
+
+# Python 缓存
+__pycache__/
+*.pyc
